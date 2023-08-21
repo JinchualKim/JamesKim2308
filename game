@@ -1,0 +1,92 @@
+import pygame
+import random
+
+# Initialize pygame
+pygame.init()
+
+# Constants
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+BLOCK_WIDTH = 60
+BLOCK_HEIGHT = 20
+PADDLE_WIDTH = 100
+PADDLE_HEIGHT = 10
+BALL_RADIUS = 10
+BLOCK_ROWS = 5
+BLOCK_COLS = 10
+BLOCK_COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255)]
+
+# Create the game window
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Block Breaker")
+
+# Create paddle
+paddle = pygame.Rect((SCREEN_WIDTH - PADDLE_WIDTH) // 2, SCREEN_HEIGHT - PADDLE_HEIGHT - 10, PADDLE_WIDTH, PADDLE_HEIGHT)
+
+# Create ball
+ball = pygame.Rect(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, BALL_RADIUS * 2, BALL_RADIUS * 2)
+ball_speed = [5, -5]  # [x_speed, y_speed]
+
+# Create blocks
+blocks = []
+for row in range(BLOCK_ROWS):
+    for col in range(BLOCK_COLS):
+        block = pygame.Rect(col * (BLOCK_WIDTH + 5), row * (BLOCK_HEIGHT + 5) + 50, BLOCK_WIDTH, BLOCK_HEIGHT)
+        blocks.append(block)
+
+# Set up colors
+background_color = (0, 0, 0)
+paddle_color = (255, 255, 255)
+ball_color = (255, 255, 255)
+
+# Game loop
+clock = pygame.time.Clock()
+running = True
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Move paddle
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        paddle.move_ip(-5, 0)
+    if keys[pygame.K_RIGHT]:
+        paddle.move_ip(5, 0)
+
+    # Move ball
+    ball.move_ip(ball_speed[0], ball_speed[1])
+
+    # Check for collisions
+    if ball.left <= 0 or ball.right >= SCREEN_WIDTH:
+        ball_speed[0] = -ball_speed[0]
+    if ball.top <= 0:
+        ball_speed[1] = -ball_speed[1]
+    if ball.colliderect(paddle):
+        ball_speed[1] = -ball_speed[1]
+
+    # Check block collisions
+    for block in blocks:
+        if ball.colliderect(block):
+            blocks.remove(block)
+            ball_speed[1] = -ball_speed[1]
+            break
+
+    # Clear the screen
+    screen.fill(background_color)
+
+    # Draw everything
+    pygame.draw.rect(screen, paddle_color, paddle)
+    pygame.draw.circle(screen, ball_color, ball.center, BALL_RADIUS)
+    for block in blocks:
+        pygame.draw.rect(screen, random.choice(BLOCK_COLORS), block)
+
+    # Update the display
+    pygame.display.flip()
+
+    # Cap the frame rate
+    clock.tick(60)
+
+# Clean up
+pygame.quit()
